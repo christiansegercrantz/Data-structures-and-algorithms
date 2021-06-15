@@ -50,10 +50,13 @@ object matcher {
    */
   def fast[NutType <: Nut : ClassTag, BoltType <: Bolt : ClassTag](nuts: IndexedSeq[NutType], bolts: IndexedSeq[BoltType]): IndexedSeq[(NutType,BoltType)] = {
     val result = scala.collection.mutable.ArrayBuffer[(NutType,BoltType)]()
-    //val unmatchedBolts = bolts.toArray
-    //var nofUnmatchedBolts = unmatchedBolts.length
-    var pivotNut = nuts(0)
-    var groupedBolts = bolts.groupBy(_.compare(pivotNut))
+    val unmatchedBolts = bolts.toArray
+    var nofUnmatchedBolts = unmatchedBolts.length
+    var pivotNut = nuts(nofUnmatchedBolts-1)
+    var groupedBolts: Map[Int, Seq[BoltType]] = bolts.groupBy(_.compare(pivotNut))
+    //var pivotBolt = ???
+    //var groupedNuts: Map[Int, Seq[NutType]] = nuts.groupBy(_.compare(pivotBolt))
+    var test = groupedBolts.
     return(result.toIndexedSeq)
   }
 }
