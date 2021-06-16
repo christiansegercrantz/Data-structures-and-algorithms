@@ -51,11 +51,11 @@ object matcher {
   def fast[NutType <: Nut : ClassTag, BoltType <: Bolt : ClassTag](nuts: IndexedSeq[NutType], bolts: IndexedSeq[BoltType]): IndexedSeq[(NutType,BoltType)] = {
     val result = scala.collection.mutable.ArrayBuffer[(NutType,BoltType)]()
 
-    def findPairs(nuts: IndexedSeq[NutType], bolts: IndexedSeq[BoltType]): Int = {
+    def findPairs(nuts: IndexedSeq[NutType], bolts: IndexedSeq[BoltType]): Unit = {
       val unmatchedNuts = nuts.toArray
       val unmatchedBolts = bolts.toArray
       if(unmatchedNuts.length == 0 || unmatchedBolts.length == 0){
-        return 1
+        return 
       }
       var pivotNut = nuts(0)
       var groupedBolts: Map[Int, Seq[BoltType]] = bolts.groupBy(_.compare(pivotNut))
@@ -63,13 +63,12 @@ object matcher {
       var groupedNuts: Map[Int, Seq[NutType]] = nuts.groupBy(_.compare(pivotBolt))
       var sameSize = groupedNuts(0).zip(groupedBolts(0))
       sameSize.foreach(result += _)
+      if(groupedNuts.get(-1) != None){
+        findPairs(groupedNuts(-1).toIndexedSeq, groupedBolts(-1).toIndexedSeq)
+      }
       if(groupedNuts.get(1) != None){
         findPairs(groupedNuts(1).toIndexedSeq, groupedBolts(1).toIndexedSeq)
       }
-      if(groupedNuts.get(2) != None){
-        findPairs(groupedNuts(2).toIndexedSeq, groupedBolts(2).toIndexedSeq)
-      }
-      0
     }
     findPairs(nuts, bolts)
     return result.toIndexedSeq
