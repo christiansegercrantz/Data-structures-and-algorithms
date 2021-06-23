@@ -66,12 +66,11 @@ class ResourceAnalyzerFast extends ResourceAnalyzer {
     // Input validation: the tasks are given in the order of start time
     require(prevStart <= task.start)
     prevStart = task.start
-    print(liveTasksEndTime)
     while(!liveTasksEndTime.isEmpty && prevStart >= liveTasksEndTime.head){
       liveTasksEndTime.dequeue()
     }
     liveTasksEndTime.enqueue(task.end)
-    minResources_.max(liveTasksEndTime.length)
+    minResources_ = minResources_.max(liveTasksEndTime.length)
   }
   def minResources: Int = {
     minResources_
