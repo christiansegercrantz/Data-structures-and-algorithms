@@ -60,14 +60,20 @@ class ResourceAnalyzerFast extends ResourceAnalyzer {
   // For input validation only
   protected var prevStart = -1L
   // Introduce your internal data structures here.
-
+  protected var liveTasksEndTime =  scala.collection.mutable.PriorityQueue[Long]()(Ordering[Long].reverse)
+  protected var minResources_ = 0
   def newTask(task: Task) = {
     // Input validation: the tasks are given in the order of start time
     require(prevStart <= task.start)
     prevStart = task.start
-    ???
+    print(liveTasksEndTime)
+    while(!liveTasksEndTime.isEmpty && prevStart >= liveTasksEndTime.head){
+      liveTasksEndTime.dequeue()
+    }
+    liveTasksEndTime.enqueue(task.end)
+    minResources_.max(liveTasksEndTime.length)
   }
   def minResources: Int = {
-    ???
+    minResources_
   }
 }
