@@ -24,15 +24,27 @@ object solver {
    */
   def solve(nofVertices: Int, edges: Seq[(Int, Int, Int)]): Option[Int] = {
     require(nofVertices >= 1)
+    val queEdges = scala.collection.mutable.PriorityQueue[(Int,Int,Int)]()(Ordering.by( _._2))
     edges.foreach({case (vertex1, weight, vertex2) =>
       require(0 <= vertex1 && vertex1 < nofVertices &&
               0 <= vertex2 && vertex2 < nofVertices &&
-              weight >= 0)})
+              weight >= 0)
+            queEdges.enqueue((vertex1, weight, vertex2))})
     // The sets of vertices 
     val sets = new UnionFind[Int]()
-    //val n = sets.nofSets
-    //var i = 0
-    ???
+    
+    var i = 0
+    while(i < nofVertices){
+      sets.makeSet(i)
+      i += 1
+    }
+    var last = 0
+    while(!queEdges.isEmpty && sets.nofSets > 1){
+      sets.union(queEdges.head._1,queEdges.head._3)
+      last = queEdges.dequeue()._2
+    }
+    if(sets.nofSets != 1) return None
+    else return Some(last)
   }
 }
 
@@ -48,6 +60,7 @@ class UnionFind[E] {
   protected val parent = new scala.collection.mutable.HashMap[E, E]()
   protected val rank = new scala.collection.mutable.HashMap[E, Int]()
   protected var _nofSets = 0
+  protected var _nofElements = 0 
 
   /**
    * Introduce a new element in this disjoint sets data structure and
@@ -59,11 +72,13 @@ class UnionFind[E] {
    * searches and insertions are used in the code).
    */
   def makeSet(element: E): Boolean = {
-    if(parent(element) != null){
+    if(parent.get(element) != None){
       return false
     }
     parent(element) = element
     rank(element) = 0
+    _nofElements += 1
+    _nofSets += 1
     return true
   }
   
@@ -81,11 +96,11 @@ class UnionFind[E] {
    * where n is the number of elements in all the sets.
    */
   def findSet(element: E): E = {
-    if(parent(element) == null){
-      throw new Error("Not in set")
-    }
-    var belongsTo: E = parent(element) 
-    while(belongsTo != belongsTo){
+    require(parent(element) != null)
+    var belongsTo: E = parent(element)
+    var currentElem = element
+    while(belongsTo != currentElem){
+      currentElem = belongsTo
       belongsTo = parent(belongsTo)
     }
     return belongsTo
@@ -107,14 +122,14 @@ class UnionFind[E] {
         if(rank(set1parent) == rank(set2parent)){
           rank(set2parent) +=  +1
         }
-      } 
+      }
+      _nofSets -= 1 
     }
-    
   }
 
   /** Get the number of elements in this disjoint sets data structure. */
   def nofElements: Int = {
-    ???
+    return _nofElements
   }
 
   /** Get the number of sets in this disjoint sets data structure. */
