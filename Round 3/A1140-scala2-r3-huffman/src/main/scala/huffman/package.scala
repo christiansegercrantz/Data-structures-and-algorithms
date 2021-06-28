@@ -135,10 +135,10 @@ package object huffman {
     def setBytes(node: Node, encoding: ArrayBuffer[Boolean]) {
       node match {
         case Internal(left, right) => {
-          val leftEncoding = encoding.clone
-          val rightEncoding = encoding.clone
-          setBytes(left, leftEncoding += false)
-          setBytes(right, rightEncoding +=  true)
+          //val leftEncoding = encoding.clone
+          //val rightEncoding = encoding.clone
+          setBytes(left, encoding :+ false)
+          setBytes(right, encoding :+  true)
         }
         case Leaf(symbol, freq) => {
           res += (symbol.toByte -> encoding.toVector)
