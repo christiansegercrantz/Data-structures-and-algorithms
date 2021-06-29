@@ -52,7 +52,7 @@ class SlowFilter[A](windowSize: Int)(implicit ev: A => Ordered[A]) extends Filte
 class FastFilter[A](windowSize: Int)(implicit ev: A => Ordered[A]) extends Filter[A](windowSize) {
   val queue = new scala.collection.mutable.Queue[A]()
   /* Insert additional data structures here */
-
+  val tree = new java.util.TreeMap[A, Int]()
   /**
    * Insert the value to the moving window, remove the earliest one, and
    * return the minimum and maximum values in the current window.
@@ -70,6 +70,28 @@ class FastFilter[A](windowSize: Int)(implicit ev: A => Ordered[A]) extends Filte
     // when a value is removed from or inserted to the window/queue.
     // Hint: ordered sets are probably not sufficient for tracking the queue
     // contents because the window may contain multiple occurrences of a value.
-    ???
+    if(queue.size == windowSize){
+      val removed = queue.dequeue()
+      val treeRemovedVal = tree.get(removed)
+      if(treeRemovedVal > 1 ){
+        tree.put(removed, treeRemovedVal-1 )
+      }
+      else{
+        tree.remove(removed)
+      }
+      
+    }
+    
+    queue.enqueue(value)
+    val treeAddedVal = tree.get(value)
+    if(treeAddedVal > 0){
+      tree.put(value, treeAddedVal +1)
+    }else {
+      tree.put(value, 1)
+    }
+    
+    return (tree.firstKey, tree.lastKey())
+      
   }
+
 }
