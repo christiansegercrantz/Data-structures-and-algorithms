@@ -130,14 +130,43 @@ class TreeMap[Key : ClassTag, Value](implicit ord: Ordering[Key]) {
    * Should work in time O(h), where h is the height of the tree.
    */
   def ceiling(key: Key): Option[Key] = {
-    if(root == null){
+    if(root == null ){
       return None
     }
     def inner(currentNode: Node[Key, Value]): Option[Key] = {
-      val comp = ord.compare(currentNode.key, key)
-      comp match {
+      ord.compare(currentNode.key, key) match {
         case -1 => {
-          
+          if( currentNode.right == null){
+            if(currentNode == root){
+              return None
+            }
+            else{
+              return upwards(currentNode.parent)
+            }
+          }
+          inner(currentNode.right)
+        }
+        case 0 => {
+            return Some(currentNode.key)
+        }
+        case 1 => {
+          if( currentNode.left == null){
+            return Some(currentNode.key)
+          }
+          inner(currentNode.left)
+        }
+      }
+    }
+    def upwards(currentNode: Node[Key, Value]): Option[Key] = {
+      ord.compare(currentNode.key, key) match {
+        case -1 => {
+          if(currentNode.parent == null){
+            return None
+          }
+          upwards(currentNode.parent)
+        }
+        case _ => {
+          return Some(currentNode.key)
         }
       }
     }
@@ -194,7 +223,47 @@ class TreeMap[Key : ClassTag, Value](implicit ord: Ordering[Key]) {
    * Remember to update the _nofKeys counter.
    */
   def remove(key: Key): Option[Value] = {
-    ???
+    
+    def inner(currentNode: Node[Key, Value]): Option[Value] = {
+      ord.compare(currentNode.key, key) match {
+        case 0 => {
+          _nofKeys -= 1
+          val ret: Value = currentNode.value
+          if(currentNode.left == null){
+            if(currentNode.right == null){ 
+              substWith(currentNode, null)
+              return(Some(ret))
+            }
+            substWith(currentNode, currentNode.right)
+            return(Some(ret))
+          }
+          val replacementNode = largestLeft(currentNode.left)
+          currentNode.key = replacementNode.key
+          currentNode.value = replacementNode.value
+          substWith(replacementNode, replacementNode.left)
+          return(Some(ret))
+        }
+        case 1 => {
+          if(currentNode.left == null){
+            return None
+          }
+          inner(currentNode.left)
+        }
+        case -1 => {
+          if(currentNode.right == null){
+            return None
+          }
+          inner(currentNode.right)
+        }
+      }
+    }
+    def largestLeft (currentNode: Node[Key, Value]): Node[Key, Value] = {
+      if( currentNode.right != null){
+        return largestLeft(currentNode.right)
+      }
+      return currentNode
+    }
+    inner(root)
   }
 
 
