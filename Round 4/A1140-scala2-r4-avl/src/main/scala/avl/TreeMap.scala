@@ -47,7 +47,8 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
       currentNode.right = null
     }
     rightNode.left = currentNode
-    
+    currentNode.updateHeight()
+    rightNode.updateHeight()
   }
 
   def rightRotate( currentNode: Node[Key,Value]): Unit = {
@@ -67,31 +68,32 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
       currentNode.left = null
     }
     leftNode.right = currentNode
+    currentNode.updateHeight()
+    leftNode.updateHeight()
   }
 
   def rebalanceNode( currentNode: Node[Key,Value]): Unit = {
-    val bal = currentNode.balance
-    if( currentNode.key == 22){
-      1+1
-    }
     currentNode.updateHeight()
+    val bal = currentNode.balance
     currentNode.balance match {
       case x if x < -1 => {
+        if(currentNode.left.balance > 0) {
+            leftRotate(currentNode.left)
+        }
         rightRotate(currentNode)
-        rebalanceNode(currentNode)
       }
       case x if x > 1 => {
-        rightRotate(currentNode.right)
-        leftRotate(currentNode)
-        rebalanceNode(currentNode)
-      }
-      case _ =>{
-        if(currentNode.hasParent){
-          rebalanceNode(currentNode.parent)
+        if(currentNode.right.balance < 0) {
+            rightRotate(currentNode.right)
         }
+        leftRotate(currentNode)
       }
-    }
+      case _ => {}
+      if(currentNode.hasParent){
+          rebalanceNode(currentNode.parent)
+      }
 
+    }
   }
   
   /**
@@ -148,7 +150,24 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
    * Should work in time O(h), where h is the height of the tree.
    */
   def get(key: Key): Option[Value] = {
-    ???
+        def inner (currentNode: Node[Key,Value]): Option[Value] = {
+      if(currentNode == null){
+        return None
+      }
+      ord.compare(key, currentNode.key) match{
+        case 0 =>{
+          return Some(currentNode.value)
+        }
+        case 1 => {
+          inner(currentNode.right)
+        }
+        case -1 => {
+          inner(currentNode.left)
+        }
+      }
+    }
+
+    inner(root)
   }
 
   /*
@@ -156,7 +175,17 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
    * Should work in time O(h), where h is the height of the tree.
    */
   def min: Option[Key] = {
-    ???
+    if(root == null){
+      return None
+    }
+    def inner(currentNode: Node[Key, Value]): Option[Key] = {
+      if(currentNode.left == null){
+        return Some(currentNode.key)
+      } else{
+        inner(currentNode.left)
+      }
+    }
+    inner(root)
   }
 
   /*
@@ -166,7 +195,47 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
    * Should work in time O(h), where h is the height of the tree.
    */
   def ceiling(key: Key): Option[Key] = {
-    ???
+    if(root == null ){
+      return None
+    }
+    def inner(currentNode: Node[Key, Value]): Option[Key] = {
+      ord.compare(currentNode.key, key) match {
+        case -1 => {
+          if( currentNode.right == null){
+            if(currentNode == root){
+              return None
+            }
+            else{
+              return upwards(currentNode.parent)
+            }
+          }
+          inner(currentNode.right)
+        }
+        case 0 => {
+            return Some(currentNode.key)
+        }
+        case 1 => {
+          if( currentNode.left == null){
+            return Some(currentNode.key)
+          }
+          inner(currentNode.left)
+        }
+      }
+    }
+    def upwards(currentNode: Node[Key, Value]): Option[Key] = {
+      ord.compare(currentNode.key, key) match {
+        case -1 => {
+          if(currentNode.parent == null){
+            return None
+          }
+          upwards(currentNode.parent)
+        }
+        case _ => {
+          return Some(currentNode.key)
+        }
+      }
+    }
+    inner(root)
   }
 
 
@@ -201,7 +270,63 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
    * Remember to update the _nofKeys counter.
    */
   def remove(key: Key): Option[Value] = {
-    ???
+
+    def inner(currentNode: Node[Key, Value]): Option[Value] = {
+      if( currentNode.key == 7 && root.key == 7 && currentNode.hasLeft && currentNode.left.key == 3 && currentNode.hasRight && currentNode.right.key == 13){
+        1+1
+      }
+      ord.compare(currentNode.key, key) match {
+        case 0 => {
+          _nofKeys -= 1
+          val ret: Value = currentNode.value
+          if(currentNode.left == null){
+            if(currentNode.right == null){ 
+              if(currentNode.hasParent){
+                val formerParent = currentNode.parent
+                substWith(currentNode, null)
+                rebalanceNode(formerParent)
+              } else{
+                substWith(currentNode, null)
+              }
+              return(Some(ret))
+            }
+            val formerRight = currentNode.right
+            substWith(currentNode, currentNode.right)
+            rebalanceNode(formerRight)
+            return(Some(ret))
+          }
+
+          val replacementNode = largestLeft(currentNode.left)
+          currentNode.key = replacementNode.key
+          currentNode.value = replacementNode.value
+          val formerReplNodeParent = replacementNode.parent
+          substWith(replacementNode, replacementNode.left)
+          rebalanceNode(formerReplNodeParent)
+          return(Some(ret))
+        }
+        case 1 => {
+          if(currentNode.left == null){
+            return None
+          }
+          inner(currentNode.left)
+        }
+        case -1 => {
+          if(currentNode.right == null){
+            return None
+          }
+          inner(currentNode.right)
+        }
+      }
+    }
+
+    def largestLeft (currentNode: Node[Key, Value]): Node[Key, Value] = {
+      if( currentNode.right != null){
+        return largestLeft(currentNode.right)
+      }
+      return currentNode
+    }
+
+    inner(root)
   }
 
 
