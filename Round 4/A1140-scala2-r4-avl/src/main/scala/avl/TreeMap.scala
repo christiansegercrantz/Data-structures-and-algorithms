@@ -32,20 +32,67 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
 
   def leftRotate( currentNode: Node[Key,Value]): Unit = {
     val rightNode = currentNode.right
-    currentNode.right_=(rightNode.left)
-    if(currentNode.hasParent){
+    if(currentNode != root){
       if(currentNode.parent.right == currentNode){
         currentNode.parent.right = rightNode
       } else {
         currentNode.parent.left = rightNode
       }
+    } else{
+      root = rightNode
+    }
+    if(rightNode.hasLeft){
+      currentNode.right = rightNode.left
+    } else{
+      currentNode.right = null
     }
     rightNode.left = currentNode
+    
   }
 
-  def rightRotate( currentNode: Node[Key,Value]): Unit = {}
+  def rightRotate( currentNode: Node[Key,Value]): Unit = {
+    val leftNode = currentNode.left
+    if(currentNode != root){
+      if(currentNode.parent.right == currentNode){
+        currentNode.parent.right_=(leftNode)
+      } else {
+        currentNode.parent.left_=(leftNode)
+      }
+    } else {
+      root = leftNode
+    }
+    if(leftNode.hasRight){
+      currentNode.left = leftNode.right
+    } else {
+      currentNode.left = null
+    }
+    leftNode.right = currentNode
+  }
 
-  def rebalanceTree( currentNode: Node[Key,Value]): Unit = {}
+  def rebalanceNode( currentNode: Node[Key,Value]): Unit = {
+    val bal = currentNode.balance
+    if( currentNode.key == 22){
+      1+1
+    }
+    currentNode.updateHeight()
+    currentNode.balance match {
+      case x if x < -1 => {
+        rightRotate(currentNode)
+        rebalanceNode(currentNode)
+      }
+      case x if x > 1 => {
+        rightRotate(currentNode.right)
+        leftRotate(currentNode)
+        rebalanceNode(currentNode)
+      }
+      case _ =>{
+        if(currentNode.hasParent){
+          rebalanceNode(currentNode.parent)
+        }
+      }
+    }
+
+  }
   
   /**
    * Insert the (key,value) mapping in the tree.
@@ -55,7 +102,44 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
    * Remember to update the _nofKeys counter.
    */
   def insert(key: Key, value: Value): Option[Value] = {
-    ???
+    if(root == null){
+        root = new Node(key,value)
+        _nofKeys += 1
+        return None
+    }
+    def transverseTree(nodeToInsert: Node[Key, Value], currentNode: Node[Key, Value]): Option[Value] = {
+      if(nodeToInsert.key == 22){
+        1+1
+      }
+      var comp = ord.compare(nodeToInsert.key, currentNode.key)
+      ord.compare(nodeToInsert.key, currentNode.key) match{
+        case 0 => {
+          val oldValue = currentNode.value
+          currentNode.value = nodeToInsert.value
+          return Some(oldValue)
+        }
+        case -1 => {
+          if(currentNode.left == null){
+            currentNode.left = nodeToInsert
+            _nofKeys += 1
+            rebalanceNode(nodeToInsert)
+            return None
+          }
+          transverseTree(nodeToInsert, currentNode.left)
+        }
+        case 1 => {
+          if(currentNode.right == null){
+            currentNode.right = nodeToInsert
+            _nofKeys += 1
+            rebalanceNode(nodeToInsert)
+            return None
+          }
+          transverseTree(nodeToInsert, currentNode.right)
+        }
+      }
+    }
+
+    transverseTree(new Node(key,value), root)
   }
 
 
