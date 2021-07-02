@@ -89,10 +89,9 @@ class TreeMap[Key, Value](implicit ord: Ordering[Key]) {
         leftRotate(currentNode)
       }
       case _ => {}
-      if(currentNode.hasParent){
-          rebalanceNode(currentNode.parent)
-      }
-
+    }
+    if(currentNode.hasParent){
+        rebalanceNode(currentNode.parent)
     }
   }
   
