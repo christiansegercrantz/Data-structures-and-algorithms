@@ -1,3 +1,4 @@
+import scala.collection.mutable
 // Scala 2 (DO NOT EDIT OR REMOVE THIS LINE!!!)
 
 /* Author: Teemu Pudas and Tommi Junttila, Aalto University.
@@ -57,27 +58,77 @@ package object knapsack {
     }})
     val n = items.size
     val _items = items.toArray.sortBy(x => -x.value/x.weight)
-    val m = new Array[Array[(Int, List[Item])]](maxWeight+1)
-    m(0) = Array.fill(n+1)(0, Nil)
-
-    for( i <- 1 to n){
-      m(i) = Array.fill(n+1)(0, Nil)
-      for(j <- 1 to maxWeight){
-        if(_items(i).weight > j){
+    val m = new Array[Array[(Int)]](n+1)
+    m(0) = Array.fill(maxWeight+1)(0)
+    var i = 1
+    while( i <= n){
+      m(i) = Array.fill(maxWeight+1)(0)
+      var j = 1
+      while(j <= maxWeight){
+        if(_items(i-1).weight > j){
           m(i)(j) = m(i-1)(j)
         }
         else{
-          if(m(i-1)(j)._1 >= (m(i-1)(j-_items(i).weight)._1 + _items(i).value)){
+          if(m(i-1)(j) >= (m(i-1)(j-_items(i-1).weight) + _items(i-1).value)){
+            m(i)(j) = m(i-1)(j)
+          }
+          else{
+            m(i)(j) = m(i-1)(j-_items(i-1).weight) + _items(i-1).value
+            
+          }
+        }
+        j += 1
+      }
+      i += 1
+    }
+    val solItems = new scala.collection.mutable.ArrayBuffer[Item]()
+    var currentWeight = maxWeight
+    var h = items.size
+    while(currentWeight > 0 && h > 0 ){
+      if(m(h)(currentWeight) == m(h-1)(currentWeight)){
+        h -= 1
+      } else{
+        solItems += _items(h-1)
+        currentWeight -= _items(h-1).weight
+        h -= 1
+      }
+    }
+    val test = solItems.toSeq
+    (m(n)(maxWeight), test)
+  }
+}
+
+/*
+def solveDynProg(maxWeight: Int, items: Seq[Item]): (Int, Seq[Item]) = {
+    // Check that all weights and values are positive
+    items.foreach({case Item(weight, value) => {
+      require(weight > 0)
+      require(value > 0)
+    }})
+    val n = items.size
+    val _items = items.toArray.sortBy(x => -x.value/x.weight)
+    val m = new Array[Array[(Int, List[Item])]](n+1)
+    m(0) = Array.fill(maxWeight+1)(0, Nil)
+    var i = 1
+    while( i <= n){
+      m(i) = Array.fill(maxWeight+1)(0, Nil)
+      var j = 1
+      while(j <= maxWeight){
+        if(_items(i-1).weight > j){
+          m(i)(j) = m(i-1)(j)
+        }
+        else{
+          if(m(i-1)(j)._1 >= (m(i-1)(j-_items(i-1).weight)._1 + _items(i-1).value)){
             m(i)(j) = (m(i-1)(j)._1,m(i-1)(j)._2)
           }
           else{
-            m(i)(j) = (m(i-1)(j-_items(i).weight)._1 + _items(i).value, m(i-1)(j-_items(i).weight)._2 ++ List(_items(i)))
+            m(i)(j) = (m(i-1)(j-_items(i-1).weight)._1 + _items(i-1).value, m(i-1)(j-_items(i-1).weight)._2 ++ List(_items(i-1)))
             
           }
-         
         }
+        j += 1
       }
+      i += 1
     }
     (m(n)(maxWeight)._1, m(n)(maxWeight)._2.toSeq)
-  }
-}
+  }*/
