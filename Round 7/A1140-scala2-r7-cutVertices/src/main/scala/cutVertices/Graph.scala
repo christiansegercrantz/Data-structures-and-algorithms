@@ -133,29 +133,55 @@ class Graph(val nofVertices: Int, edges: Seq[(Int,Int)]) {
     val childCount = HashMap[Int,Int]()
     val isCutVertices = HashSet[Int]()
 
-    def visit(v: Int, d: Int): Unit = {
-      visited(v) = true
-      depth(v) = d
-      low(v) = d
+    class Frame(val currentNode: Int, val depth: Int){
+      var iteration: Int = 0
       var isCV: Boolean = false
-      for(u <- neighbours(v)){
-        if(!visited(u)){
-          parent(u) = v
-          visit(u, d + 1)
-          childCount(v) = childCount.getOrElse(v, 0) + 1
-          if(low(u) >= depth(v)){
-            isCV = true
-          }
-          low(v) = Math.min(low(v), low(u))
-        } else if(u != parent.getOrElse(v, null)){
-          low(v) = Math.min(low(v), depth(u))
-        }
+    }
+    val stack = new collection.mutable.Stack[Frame]()
+    stack.push(new Frame(0,0))
+    while(stack.nonEmpty){
+      val currentFrame = stack.top
+      val v = currentFrame.currentNode
+      visited(v) = true
+      depth(v) = currentFrame.depth
+      low.getOrElse(v, low(v) = currentFrame.depth)
+      val neighbourIterator = neighbours(v).iterator
+      var i = 0
+      while(i < currentFrame.iteration && neighbourIterator.hasNext){
+        neighbourIterator.next()
+        i += 1
       }
-    if( (parent.getOrElse(v, null) != null && isCV == true) || (parent.getOrElse(v, null) == null && childCount(v) > 1)){
-      isCutVertices(v) = true
+      if(neighbourIterator.hasNext){
+        val u = neighbourIterator.next()
+        currentFrame.iteration += 1
+        if(!visited(u)){
+          if( v == 0){
+            1+1
+          }
+          childCount(v) = childCount.getOrElse(v, 0) + 1 
+          parent(u) = v
+          stack.push(new Frame(u, currentFrame.depth + 1))
+        } else if(u != parent.getOrElse(v, null)){
+            low(v) = Math.min(low(v), depth(u))
+        }
+      } else{
+          if(parent.getOrElse(v, null) != null){
+            val vParent = parent(v)
+            if(low(v) >= depth(vParent)){
+              val lowTest = low(v)
+              val depthTest = depth(vParent)
+              if(vParent != 0){
+                isCutVertices(vParent) = true
+              }
+            }
+            low(vParent) = Math.min(low(vParent), low(v))
+          }
+          stack.pop()
+      }
     }
+    if(childCount(0) > 1){
+      isCutVertices(0) = true
     }
-    visit(0, 0)
     isCutVertices.toSet
   }
 
