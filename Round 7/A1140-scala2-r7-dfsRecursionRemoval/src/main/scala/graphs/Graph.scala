@@ -179,8 +179,56 @@ final class Graph[V] {
     val visited = scala.collection.mutable.HashSet[V]()
     // The path is constructed here
     var path: List[V] = Nil
-
-    ???
+    class CallResult() {
+       var pathFound: Boolean = false
+       }
+    class Frame(val currentNode: V, val returnValue: CallResult){
+      var iteration: Int = 0
+    }
+    val stack = new collection.mutable.Stack[Frame]()
+    val finalResult = new CallResult()
+    stack.push(new Frame(source, finalResult))
+    visited(source) = true
+    if(targetPred(source)){
+       finalResult.pathFound == true
+    }
+    while(stack.nonEmpty){
+      val currentFrame = stack.top
+      if(currentFrame.returnValue.pathFound == true){
+        path = currentFrame.currentNode :: path
+        stack.pop()
+      } else{
+        val neighbourIterator = neighbours(currentFrame.currentNode).iterator
+        var i = 0
+        while(i < currentFrame.iteration && neighbourIterator.hasNext){
+          neighbourIterator.next()
+          i += 1
+        }
+        if(neighbourIterator.hasNext){
+          val nextNeighbour = neighbourIterator.next()
+          currentFrame.iteration += 1
+          if(!visited(nextNeighbour)){
+            visited(nextNeighbour) = true
+            if(targetPred(nextNeighbour)){
+              currentFrame.returnValue.pathFound = true
+              path = nextNeighbour :: path
+              path = currentFrame.currentNode :: path
+              stack.pop()
+            } else{
+              stack.push(new Frame(nextNeighbour, new CallResult()))
+            }
+          }
+        } else{
+          stack.pop()
+        }
+      }
+      if(stack.nonEmpty) stack.top.returnValue.pathFound = currentFrame.returnValue.pathFound
+    }
+    if(finalResult.pathFound == true){
+      Some(path)
+    } else{
+      None
+    }   
   }
 }
 
